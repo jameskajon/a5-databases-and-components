@@ -1,0 +1,48 @@
+<div class="row m-0">
+    <div class="col p-0">
+        <table class="table table-striped table-bordered table-responsive-sm table-add-row-table">
+            <thead class="thead-light">
+            <tr id="home-headers">
+                <th scope="col" class="w-25">Topic</th>
+                <th scope="col" class="created-col">Created</th>
+                <th scope="col">Statistics</th>
+                <th scope="col">Last post</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{#each this.forumData as |entry|}}
+                <tr>
+                    <td>
+                        <h3 class="h6"><a href="/forum/{{ forumId }}">{{ entry.title }}</a></h3>
+                        <div class="small">{{ entry.shortDesc }}</div>
+                    </td>
+                    <td>
+                        <a title="{{ entry.created.email }}" data-uid="{{ message.uid }}" href="/user/{{ entry.created.uid }}">{{ entry.created.name }}</a>
+                        <div>{{ entry.created.date }}</div>
+                    </td>
+                    <td>
+                        <div>{{ entry.stats.replies }} replies</div>
+                        <div>{{ entry.stats.views }} views</div>
+                    </td>
+                    <td>
+                        <a title="{{ entry.lastPost.email }}" data-uid="{{ message.uid }}" href="/user/{{ entry.created.uid }}">{{ entry.lastPost.name }}</a>
+                        <div>{{ entry.lastPost.date }}</div>
+                    </td>
+                </tr>
+            {{/each}}
+            <tr class="table-add-row">
+                <td colspan="4">
+                    <button class="btn btn-info d-block" data-toggle="modal" data-target="#addThreadFormModal">Start a new Forum</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODALS -->
+{{#> layouts/modal-layout type="addThread" title="Add a Message" submitText="Post Message" }}
+    {{#*inline "form-content"}}
+        {{> includes/add-thread-form }}
+    {{/inline}}
+{{/layouts/modal-layout}}

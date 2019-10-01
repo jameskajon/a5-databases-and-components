@@ -1,0 +1,62 @@
+
+/* FORUMS */
+
+#home-headers > :first-child {
+    min-width: 12em;
+}
+
+#home-headers > :last-child {
+    min-width: 8em;
+}
+
+#forum-headers > :first-child {
+    min-width: 8em;
+}
+
+.edit-btn {
+    color: orange!important;
+}
+
+.delete-btn {
+    color: red!important;
+}
+
+/* FORM */
+
+/* no good. messes with screan reader (voiceover) */
+/*.table-add-row {*/
+/*    visibility: hidden;*/
+/*}*/
+/*.table-add-row button {*/
+/*    visibility: visible;  */
+/*    */
+/*}*/
+
+.table-add-row-table {
+    border-bottom: 0!important;
+}
+
+.table-add-row {
+    background-color: transparent!important;
+    border: 0!important;
+}
+
+.table-add-row > td {
+    border: 0!important;
+
+}
+
+
+/* forum text */
+
+.forum-text {
+    white-space: pre-wrap;
+}
+
+/* MODALS */
+
+/* counteract bootstrap right padding to accommodate disappearing of scrollbar
+/*.modal-open{*/
+/*    overflow:auto;*/
+/*    padding-right:0 !important;*/
+/*}*/
