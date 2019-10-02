@@ -1,5 +1,5 @@
 {
-  "name": "a3-jameskajon",
+  "name": "a5-jameskajon",
   "version": "0.3.0",
   "description": "A forum. Now with users accounts",
   "author": "James Kajon",
@@ -12,7 +12,6 @@
     "express-handlebars": "^3.1.0",
     "firebase-admin": "^8.5.0",
     "mime": "^2.4.4",
-    "morgan": "^1.9.1",
-    "svelte": "^3.12.1"
+    "morgan": "^1.9.1"
   }
 }
