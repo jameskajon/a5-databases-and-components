@@ -1,18 +1,27 @@
 {
-  "name": "a3-jameskajon",
-  "version": "0.3.0",
+  "name": "a5-jameskajon",
+  "version": "0.4.0",
   "description": "A forum. Now with users accounts",
   "author": "James Kajon",
   "scripts": {
-    "start": "node app.js"
+    "build": "rollup -c",
+    "autobuild": "rollup -c -w",
+    "dev": "run-p start:dev autobuild",
+    "start": "sirv public --single",
+    "start:dev": "sirv public --single --dev"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.12.0",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-livereload": "^1.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-svelte": "^5.0.3",
+    "rollup-plugin-terser": "^4.0.4",
+    "svelte": "^3.0.0"
   },
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "express-handlebars": "^3.1.0",
-    "firebase-admin": "^8.5.0",
-    "mime": "^2.4.4",
-    "morgan": "^1.9.1",
-    "svelte": "^3.12.1"
+    "sirv-cli": "^0.4.4",
+    "firebase": "latest"
   }
 }
