@@ -6,49 +6,6 @@ const mongoose = require('mongoose');
 const db = firebaseAdmin.firestore();
 const auth = firebaseAdmin.auth();
 
-function formatTimestamp(timestamp) {
-    return (new Date(timestamp.seconds * 1000)).toUTCString()
-}
-
-// async function getForum(forumId) {
-//     let forumDoc = db.collection('forums').doc(forumId);
-//     let messageQuery = forumDoc.collection('messages').orderBy('date');
-//     let forumPromise = forumDoc.get()
-//         .then(snapshot => {
-//             return {
-//                 forumTitle: snapshot.data().title,
-//                 forumId: snapshot.id,
-//             };
-//         })
-//         .catch(err => {
-//             console.log('Error getting documents', err);
-//         });
-//     let messagesPromises = messageQuery.get()
-//         .then(snapshot => {
-//             return snapshot.docs.map(async function(doc) {
-//                 return getUserDataUid(doc.data().poster)  // poster is the uid of the poster
-//                     .then(userData => {
-//                         return {
-//                             messageId: doc.id,
-//                             message: doc.data().message,
-//                             ... userData,
-//                             date: formatTimestamp(doc.data().date),
-//                         }
-//                     });
-//             });
-//         })
-//         .catch(err => {
-//             console.log('Error getting documents', err);
-//         });
-//
-//     return {
-//         ... await forumPromise,
-//         messages: await Promise.all(await messagesPromises),
-//     };
-// }
-
-// getForum('BNNXBsnS7TiDc40n9dvN');
-
 async function getForum(forumId) {
     return await mongoose.model('forums').findOne({_id:forumId})
         .then((forum) => {
@@ -78,7 +35,6 @@ async function getForum(forumId) {
             console.log('Error getting documents', err);
         });
 }
-// getForumM('5d94fdefbcc884380cd8d86c');
 
 async function getForums() {
     const messagesPromises = [];
@@ -112,84 +68,6 @@ async function getForums() {
         forum.messageData = msgsData[idx];
     });
     return forums;
-}
-
-// async function getForums() {
-//     let forumsQuery = db.collection('forums').orderBy('views', 'desc');
-//     let forumsPromises = forumsQuery.get()
-//         .then(snapshot => {
-//             return snapshot.docs.map(async function(doc) {
-//                 return {
-//                     forumId: doc.id,
-//                     title: doc.data().title,
-//                     stats: {
-//                         views: doc.data().views,
-//                         replies: doc.data().replies,
-//                     },
-//                     messageData: getMessageData(doc),
-//                 }
-//             });
-//         })
-//         .catch(err => {
-//             console.log('Error getting documents', err);
-//         });
-//
-//     // console.log("waiting for data to finish loading");
-//     let data = await Promise.all(await forumsPromises)
-//         .then(forums => {
-//             return forums.map(async function(forum) {
-//                 return {
-//                     forumId: forum.forumId,
-//                     title: forum.title,
-//                     shortDesc: (await forum.messageData.firstMessagePromise).shortDesc,
-//                     stats: forum.stats,
-//                     created: await (await forum.messageData.firstMessagePromise).created,
-//                     lastPost: await (await forum.messageData.lastMessagePromise).lastPost,
-//
-//                 };
-//             });
-//         });
-//     return await Promise.all(data);
-// }
-
-// returns two promises
-function getMessageData(forumDoc) {
-    let firstMessageQuery = forumDoc.ref.collection('messages').orderBy('date').limit(1);
-    let lastMessageQuery = forumDoc.ref.collection('messages').orderBy('date', "desc").limit(1);
-    let firstMessagePromise = firstMessageQuery.get()
-        .then(snapshot => {return snapshot.docs[0].data()})
-        .then(async data => {
-            return {
-                shortDesc: data.message,
-                created: getUserDataUid(data.poster)  // poster is the uid of the poster
-                    .then(userData => {
-                        return {
-                            ... userData,
-                            date: formatTimestamp(data.date),
-                        }
-                    }),
-            }
-        })
-        .catch(err => {
-            console.log('Error getting documents', err);
-        });
-    let lastMessagePromise = lastMessageQuery.get()
-        .then(snapshot => {return snapshot.docs[0].data()})
-        .then(data => {
-            return {
-                lastPost: getUserDataUid(data.poster)  // poster is the uid of the poster
-                    .then(userData => {
-                        return {
-                            ... userData,
-                            date: formatTimestamp(data.date),
-                        }
-                    }),
-            }
-        })
-        .catch(err => {
-            console.log('Error getting documents', err);
-        });
-    return {firstMessagePromise, lastMessagePromise}
 }
 
 // returns promise
