@@ -13,20 +13,20 @@
             {{#each this.forumData as |entry|}}
                 <tr>
                     <td>
-                        <h3 class="h6"><a href="/forum/{{ forumId }}">{{ entry.title }}</a></h3>
-                        <div class="small">{{ entry.shortDesc }}</div>
+                        <h3 class="h6"><a href="/forum/{{ forumId }}">{{ title }}</a></h3>
+                        <div class="small">{{ shortDesc }}</div>
                     </td>
                     <td>
-                        <a title="{{ entry.created.email }}" data-uid="{{ message.uid }}" href="/user/{{ entry.created.uid }}">{{ entry.created.name }}</a>
-                        <div>{{ entry.created.date }}</div>
+                        <a title="{{ messageData.created.email }}" data-uid="{{ messageData.created.uid }}" href="/user/{{ messageData.created.uid }}">{{ messageData.created.name }}</a>
+                        <div>{{ messageData.created.date }}</div>
                     </td>
                     <td>
                         <div>{{ entry.stats.replies }} replies</div>
                         <div>{{ entry.stats.views }} views</div>
                     </td>
                     <td>
-                        <a title="{{ entry.lastPost.email }}" data-uid="{{ message.uid }}" href="/user/{{ entry.created.uid }}">{{ entry.lastPost.name }}</a>
-                        <div>{{ entry.lastPost.date }}</div>
+                        <a title="{{ messageData.lastPost.email }}" data-uid="{{ messageData.lastPost.uid }}" href="/user/{{ messageData.lastPost.uid }}">{{ messageData.lastPost.name }}</a>
+                        <div>{{ messageData.lastPost.date }}</div>
                     </td>
                 </tr>
             {{/each}}

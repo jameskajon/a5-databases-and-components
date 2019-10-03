@@ -2,6 +2,7 @@ const express = require('express'),
     bodyParser = require('body-parser'),
     hbs = require('express-handlebars'),
     morgan = require('morgan'),
+    mongoose = require('mongoose'),
     firebaseAdmin = require("firebase-admin");
 const app = express();
 const path = require('path');
@@ -13,6 +14,14 @@ firebaseAdmin.initializeApp({
     databaseURL: "https://cs4241-a2-shortstack.firebaseio.com",
     serviceAccountId: "firebase-adminsdk-78lyy@cs4241-a3-persistence.iam.gserviceaccount.com",
 });
+
+require('./models/forums.js');
+require('./models/messages.js');
+
+const mg = require('./private/mongo');
+mongoose.connect(`mongodb+srv://${mg.un}:${mg.pw}@cluster0-en3dl.mongodb.net/forum?retryWrites=true&w=majority`, { useNewUrlParser: true })
+    .then(() => console.log('Now connected to MongoDB!'))
+    .catch(err => console.error('Something went wrong', err));
 
 const forumRouter = require('./routes/forum-rounter');
 const authRouter = require('./routes/auth-routes');
