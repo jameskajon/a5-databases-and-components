@@ -16,7 +16,6 @@ firebaseAdmin.initializeApp({
 });
 
 require('./models/forums.js');
-require('./models/messages.js');
 
 const mg = require('./private/mongo');
 mongoose.connect(`mongodb+srv://${mg.un}:${mg.pw}@cluster0-en3dl.mongodb.net/forum?retryWrites=true&w=majority`, { useNewUrlParser: true })

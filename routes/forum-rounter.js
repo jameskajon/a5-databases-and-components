@@ -2,9 +2,13 @@ const express = require('express');
 const forumRouter = express.Router();
 const firebaseAdmin = require("firebase-admin");
 const mongoose = require('mongoose');
+const Forum = require('../models/forums.js');
 
-const db = firebaseAdmin.firestore();
 const auth = firebaseAdmin.auth();
+
+function formateTimestamp(ts) {
+    return ts.toLocaleString();
+}
 
 async function getForum(forumId) {
     return await mongoose.model('forums').findOne({_id:forumId})
@@ -21,7 +25,7 @@ async function getForum(forumId) {
                     return resolve({
                         messageId: msg._id,
                         message: msg.message,
-                        date: msg.date,
+                        date: formateTimestamp(msg.date),
                         ... await getUserDataUid(msg.poster),
                     });
                 }));
@@ -44,15 +48,16 @@ async function getForums() {
             await forums.forEach(forum => {
                 messagesPromises.push(new Promise(async function(resolve, reject) {
                     return resolve({
-                        created: {... await getUserDataUid(forum.messages[0].poster), date: forum.messages[0].date},  // poster is the firebase uid of the poster
+                        created: {... await getUserDataUid(forum.messages[0].poster),
+                            date: formateTimestamp(forum.messages[0].date)},  // poster is the firebase uid of the poster
                         lastPost: {... await getUserDataUid(forum.messages[forum.messages.length - 1].poster),
-                            date: forum.messages[forum.messages.length - 1].date},  // poster is the firebase uid of the poster
+                            date: formateTimestamp(forum.messages[forum.messages.length - 1].date)},  // poster is the firebase uid of the poster
                     });
                 }));
                 parsedForums.push({
                     forumId: forum._id,
                     shortDesc: forum.messages[0].message,
-                    date: forum.messages[0].date.toUTCString(),
+                    date: formateTimestamp(forum.messages[0].date),
                     title: forum.title,
                     stats: {
                         views: forum.views,
@@ -74,7 +79,6 @@ async function getForums() {
 async function getUserDataUid(uid) {
     return await auth.getUser(uid)
         .then(function(userRecord) {
-            // console.log('Successfully fetched user data:', userRecord.toJSON());
             return {
                 uid: uid,
                 name: userRecord.displayName,
@@ -96,102 +100,74 @@ async function getUserDataUid(uid) {
 // forum list view
 forumRouter.get('/', async function(req, res, next) {
     let forumData = await getForums();
-    console.log(forumData);
-    console.log(forumData[0].messageData);
     res.render('index', {title: "The Forums", forumData: forumData})
 });
 
 // forum messages view
 forumRouter.get('/forum/:forumId', async function(req, res, next) {
     let context = await getForum(req.params.forumId);
-    if (context.forumTitle === undefined && context.messages.length === 0) {
-        res.status(404).send('This forum does not exist. It may have been deleted.')
-    } else {
+    if (context) {
         res.render('forum', context)
+    } else {
+        res.status(404).send('This forum does not exist. It may have been deleted.')
     }
 });
 
 
-forumRouter.post('/submit/create', async function(req, res, next) {
-    console.log(req.body);
+forumRouter.post('/submit/post', async function(req, res, next) {
     const data = req.body;
     let forumId = data.forumId;
     let messageId = data.messageId;
-    let addTimestamp = firebaseAdmin.firestore.Timestamp.now();
+    let timestamp = Date.now();
     switch (data.action) {
         case "ADDTHREAD":
-            const newForumData = {
+            const forumDoc = new Forum({
                 title: data.title,
                 views: 0,
                 replies: 0,
-                date: addTimestamp,
-            };
-            let forumDoc = db.collection("forums").add(newForumData)
-                .then(function(docRef) {
-                    // console.log("Document written with ID: ", docRef.id);
-                    return docRef;
-                })
-                .catch(function(error) {
-                    console.error("Error adding document: ", error);
-                });
-            forumId = (await forumDoc).id;
-            // adding message and user handled in ADD case
+                date: timestamp,
+                messages: [{
+                    message: data.message,
+                    date: timestamp,
+                    poster: data.uid,
+                }],
+            });
+            forumDoc.save(function (err) {
+                if (err) console.error("Error adding document: ", err);
+            });
+            forumId = forumDoc._id;
+            break;
         case "ADD":
-
-            const newMessageData = {
-                message: data.message,
-                date: addTimestamp,
-                poster: data.uid,
-            };
-            let messageDoc = db.collection("forums").doc(forumId).collection('messages').add(newMessageData)
-                .then(function(docRef) {
-                    // console.log("Document written with ID: ", docRef.id);
-                    return docRef;
-                })
-                .catch(function(error) {
-                    console.error("Error adding document: ", error);
-                });
-            if (data.action === "ADD") {
-                db.collection("forums").doc(forumId).update({replies: firebaseAdmin.firestore.FieldValue.increment(1)})
-                    .then(function() {
-                        // console.log("Document successfully updated!");
-                    })
-                    .catch(function(error) {
-                        console.error("Error updating document: ", error);
+            await mongoose.model('forums').findOne({_id:forumId})
+                .then((forum) => {
+                    forum.messages.push({
+                        message: data.message,
+                        date: timestamp,
+                        poster: data.uid,
                     });
-            }
-            await messageDoc;
+                    forum.save();
+                })
+                .catch((err) => {
+                    console.log('Error adding message', err);
+                });
             break;
         case "DELETE":
-            // console.log("Deleting " + messageId);
-            db.collection("forums").doc(forumId).update({replies: firebaseAdmin.firestore.FieldValue.increment(-1)})
-                .then(function() {
-                    // console.log("Document successfully updated!");
-                })
-                .catch(function(error) {
-                    console.error("Error updating document: ", error);
-                });
-            await db.collection(`forums/${forumId}/messages`).doc(messageId).delete()
-                .then(function() {
-                    // console.log("Document successfully deleted!");
-                })
-                .catch(function(error) {
-                    console.error("Error removing document: ", error);
-                });
+            Forum.updateOne({_id: forumId},
+                {$pull: {messages: {_id: messageId}}},
+                function(err, status) {
+                    if (err) console.log(err);
+                }
+            );
             break;
         case "EDIT":
-            // console.log("Editing " + messageId);
-            await db.collection(`forums/${forumId}/messages`).doc(messageId).update({
-                message: data.message,
-            })
-                .then(function() {
-                    // console.log("Document successfully deleted!");
-                })
-                .catch(function(error) {
-                    console.error("Error removing document: ", error);
+            Forum.updateOne({_id: forumId, 'messages._id': messageId},
+                {'$set': {
+                    'messages.$.message': data.message,
+                }},
+                function(err, status) {
+                    if (err) console.log(err);
                 });
             break;
-
     }
     let respData = {};  // send a blank response to have the page reloaded
     if (data.action === "ADDTHREAD") {
@@ -210,14 +186,7 @@ forumRouter.get('/user/:uid', async function(req, res) {
             'Member Since: ' + userData.memberSince,
         ]
     };
-    // if (context.forumTitle === undefined && context.messages.length === 0) {
-    //     res.status(404).send('This forum does not exist. It may have been deleted.')
-    // } else {
-    console.log(context);
     res.render('user', context);
-    // }
 });
-
-
 
 module.exports = forumRouter;

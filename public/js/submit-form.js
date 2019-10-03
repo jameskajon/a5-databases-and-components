@@ -4,7 +4,8 @@ function submit(e, url, dataParser, handelResponse) {
 
     const jsonData = dataParser();
     const data = JSON.stringify(jsonData);
-    console.log("form data: ", data);
+    console.log("form data: ");
+    console.log(data);
 
     if (jsonData.warningStatus === "failed") {
         const warning = e.target.parentElement.parentElement.querySelector('div#warningAlerts span');
@@ -52,7 +53,7 @@ function signInSubmit(e, dataParser, handelResponse) {
 
 // add model submit button events and model activation events
 window.onload = async function() {
-    const submitUrl = '/submit/create';
+    const submitUrl = '/submit/post';
     const submitAuthSignUpUrl = '/auth/sign-up';
     // bind sign in and sign up events
     document.getElementById("signInSubmitBtn").onclick = ((e) => signInSubmit(e, parseSignInForm, handelSignInResponse));
